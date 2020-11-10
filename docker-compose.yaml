@@ -1,72 +1,137 @@
-#  Copyright 2017-2020 bmcustodio
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
----
-networks:
-  main:
+--- 
+networks: 
+  main: 
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.25.255.0/24
+    ipam: 
+      config: 
+        - 
+          subnet: 172.30.255.0/24
       driver: default
-services:
-  nats-1:
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
+services: 
+  nats-streaming-1: 
+    command: 
+      - "--cluster_id"
+      - nats-streaming
+      - "--store"
+      - file
+      - "--dir"
+      - /data/msg
+      - "--clustered"
+      - "--cluster_node_id"
+      - nats-streaming-1
+      - "--cluster_peers"
+      - "nats-streaming-2,nats-streaming-3"
+      - "--cluster_log_path"
+      - /data/log
+      - "--cluster_raft_logging"
+      - "--stan_debug"
+      - "--stan_trace"
       - "--port"
       - "4222"
-    image: "nats:2.1.4"
-    networks:
-      - main
-    ports:
+      - "--http_port"
+      - "8222"
+      - "--debug"
+      - "--routes"
+      - "nats://nats-streaming-2:6222,nats://nats-streaming-3:6222"
+      - "--cluster"
+      - "nats://nats-streaming-1:6222"
+      - "--hb_interval"
+      - 2s
+      - "--hb_fail_count"
+      - "1"
+    expose: 
+      - "6222"
+    image: "nats-streaming:0.16.0"
+    networks: 
+      main: 
+        ipv4_address: "172.30.255.10"
+    ports: 
       - "14222:4222"
       - "18222:8222"
-  nats-2:
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
+    volumes: 
+      - "./nats-streaming-1:/data"
+  nats-streaming-2: 
+    command: 
+      - "--cluster_id"
+      - nats-streaming
+      - "--store"
+      - file
+      - "--dir"
+      - /data/msg
+      - "--clustered"
+      - "--cluster_node_id"
+      - nats-streaming-2
+      - "--cluster_peers"
+      - "nats-streaming-1,nats-streaming-3"
+      - "--cluster_log_path"
+      - /data/log
+      - "--cluster_raft_logging"
+      - "--stan_debug"
+      - "--stan_trace"
       - "--port"
       - "4222"
+      - "--http_port"
+      - "8222"
+      - "--debug"
       - "--routes"
-      - "nats://nats-1:6222"
-    image: "nats:2.1.4"
-    networks:
-      - main
-    ports:
+      - "nats://nats-streaming-1:6222,nats://nats-streaming-3:6222"
+      - "--cluster"
+      - "nats://nats-streaming-2:6222"
+      - "--hb_interval"
+      - 2s
+      - "--hb_fail_count"
+      - "1"
+    expose: 
+      - "6222"
+    image: "nats-streaming:0.16.0"
+    networks: 
+      main: 
+        ipv4_address: "172.30.255.20"
+    ports: 
       - "24222:4222"
       - "28222:8222"
-  nats-3:
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
+    volumes: 
+      - "./nats-streaming-2:/data"
+  nats-streaming-3: 
+    command: 
+      - "--cluster_id"
+      - nats-streaming
+      - "--store"
+      - file
+      - "--dir"
+      - /data/msg
+      - "--clustered"
+      - "--cluster_node_id"
+      - nats-streaming-3
+      - "--cluster_peers"
+      - "nats-streaming-1,nats-streaming-2"
+      - "--cluster_log_path"
+      - /data/log
+      - "--cluster_raft_logging"
+      - "--stan_debug"
+      - "--stan_trace"
       - "--port"
       - "4222"
+      - "--http_port"
+      - "8222"
+      - "--debug"
       - "--routes"
-      - "nats://nats-1:6222"
-    image: "nats:2.1.4"
-    networks:
-      - main
-    ports:
+      - "nats://nats-streaming-1:6222,nats://nats-streaming-2:6222"
+      - "--cluster"
+      - "nats://nats-streaming-3:6222"
+      - "--hb_interval"
+      - 2s
+      - "--hb_fail_count"
+      - "1"
+    expose: 
+      - "6222"
+    image: "nats-streaming:0.16.0"
+    networks: 
+      main: 
+        ipv4_address: "172.30.255.30"
+    ports: 
       - "34222:4222"
       - "38222:8222"
+    volumes: 
+      - "./nats-streaming-3:/data"
 version: "3.7"
